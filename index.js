@@ -2,7 +2,9 @@ const express = require('express')
 const http = require('http')
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
-
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 let persons = [
     {
@@ -51,7 +53,13 @@ morgan.token('body', request => {
   return Object.keys(request.body).length === 0 ? null : JSON.stringify(request.body)
 })
 
+// Muista origineista palvelimelle tulevat pyynnöt voidaan sallia kaikkiin
+// backendin Express routeihin käyttämällä backendissä Noden cors-middlewarea.
+const cors = require('cors')
+
 const app = express()
+app.use(express.static('dist'))
+app.use(cors())
 app.use(express.json())
 app.use(bodyParser.json());
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
@@ -104,9 +112,7 @@ app.get('/api/persons/:id', (request, response) => {
  */
 app.delete('/api/persons/:id', (request, response) => {
   const id = Number(request.params.id)
-  console.log("DELETE", id)
   persons = persons.filter(person => person.id !== id)
-
   response.status(204).end()
 })
 
@@ -114,12 +120,11 @@ app.delete('/api/persons/:id', (request, response) => {
  * Add person
  */
 app.post('/api/persons', (request, response) => {
-  //console.log('Create', request.headers)
   const body = request.body
-
-  const msg = validatePerson(body)
+  const msg = validatePerson(body, true)
 
   if (msg.length) {
+    console.log('Post error', msg)
     return response.status(400).json({ 
       error: msg.join(', ')
     })
@@ -134,6 +139,33 @@ app.post('/api/persons', (request, response) => {
 })
 
 /**
+ * Update person
+ */
+app.put('/api/persons/:id', (request, response) => {
+  const id = Number(request.params.id)
+  const body = request.body
+  const index = persons.findIndex(person => person.id === id);
+
+    if (index !== -1) {
+        // Validate new person data
+        const msg = validatePerson(body, false)
+        if (msg.length) {
+          console.log('Put error', msg)
+          return response.status(400).json({ 
+            error: msg.join(', ')
+          })
+        }
+        // Update person list
+        persons = persons.map(person => person.id === id ? { ...person, ...body } : person)
+        console.log('Put - updated person', persons[index])
+        response.status(200).json(persons[index]);
+    } else {
+        console.log('Put error - person not found', id)
+        response.status(404).json({ error: 'person not found' });
+    }
+})
+
+/**
  * Middlewaret tulee ottaa käyttöön ennen routeja, jos ne halutaan suorittaa
  * ennen niitä. On myös eräitä tapauksia, joissa middleware tulee määritellä 
  * vasta routejen jälkeen. Käytännössä tällöin on kyse middlewareista, joita 
@@ -142,7 +174,7 @@ app.post('/api/persons', (request, response) => {
 app.use(unknownEndpoint)
 
 
-const validatePerson = (person) => {
+const validatePerson = (person, isPush) => {
   const errorMsg = []
   if (!person.name || !person.number) {
     if (!person.name) {
@@ -152,7 +184,7 @@ const validatePerson = (person) => {
       errorMsg.push('number is invalid')
     }
   }
-  else if (persons.some(p =>
+  else if (isPush && persons.some(p =>
     p.name.toLocaleLowerCase() === person.name.toLocaleLowerCase())) {
     errorMsg.push('name must be unique')
   }
@@ -180,7 +212,7 @@ const generateId = () => {
   return id
 }
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
