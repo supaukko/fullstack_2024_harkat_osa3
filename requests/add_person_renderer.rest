@@ -1,0 +1,7 @@
+POST https://fullstack-2024-harkat-osa3-v1.onrender.com/api/persons
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "number": "123456"
+}

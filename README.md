@@ -1,6 +1,26 @@
 # fullstack_2024_harkat_osa3
 Lähde: https://fullstackopen.com/osa3/node_js_ja_express - osa3 harjoitukset
 
+
+
+
+# Frontendin buildaus ja deploy Render-palveluun
+
+Sovellus viedään internettiin [Render](https://render.com/) palvelun avulla ja pyörii osoitteesta: [fullstack-2024-harkat-osa3-v1](https://fullstack-2024-harkat-osa3-v1.onrender.com)
+
+
+Frontin staattisten tiedostojen buildaus ja deploy:
+```
+npm run build:ui
+npm run deploy:full
+```
+
+[Render dashboard](https://dashboard.render.com/web/new):
+web service name: fullstack-2024-harkat-osa3-v1
+build command: npm install
+start command: npm start
+
+
 # Sovelluksen luonti
 
 ```
