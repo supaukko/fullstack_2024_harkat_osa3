@@ -19,7 +19,7 @@ const App = () => {
   }
 
   useEffect(() => {
-    console.log('** effect **')
+    console.log('effect', persons)
     personService.getAll().then(persons => {
         setPersons(persons)
       })
