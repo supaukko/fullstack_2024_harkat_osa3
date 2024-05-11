@@ -76,3 +76,38 @@ if (process.env.NODE_ENV !== 'production') {
 }
 ```
 
+
+# Tietokanta
+
+[MongoDb](https://github.com/fullstack-hy2020/misc/blob/master/dokumenttitietokannat.MD)
+
+[MongoDb Atlas -palvelu](https://www.mongodb.com/products/platform/atlas-database) tarjoaa mahdollisuuden tutustua ja opetella MongoDb tietokantaa ilmaiseksi
+
+## Ohjeita
+
+[MongoDb ohjeistukset](https://www.mongodb.com/docs/drivers/node/current/#introduction)
+
+```
+npm install mongodb
+```
+
+Yhteys URL:
+
+```
+
+const uri = "mongodb+srv://fullstacksurfing:<password>@test.n5n2a0q.mongodb.net/?retryWrites=true&w=majority&appName=Test";
+
+```
+
+## Linkkejä
+
+[Node.js starter sample app](https://github.com/mongodb-university/atlas_starter_nodejs)
+
+## Mongoose
+
+```
+npm install mongoose
+```
+
+Db url `mongodb+srv://fullstacksurfing:${password}@test.n5n2a0q.mongodb.net/?retryWrites=true&w=majority&appName=phoneBookApp`
+
