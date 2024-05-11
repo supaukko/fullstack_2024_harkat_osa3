@@ -1,29 +1,9 @@
+require('dotenv').config();
 const express = require('express')
 const http = require('http')
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
-
-let persons = [
-    {
-      "name": "Arto Hellas",
-      "number": "123-123456",
-      "id": 1
-    },
-    {
-      "name": "Ada Lovelace",
-      "number": "39-44-5323523",
-      "id": 2
-    },
-    {
-      "name": "Dan Abramov",
-      "number": "12-43-234345",
-      "id": 3
-    }
-  ]
-
+const Person = require('./models/person')
   /**
    * Middleware on funktio, joka saa kolme parametria.
    * Middleware kutsuu lopussa parametrina olevaa funktiota next,
@@ -65,6 +45,27 @@ app.use(bodyParser.json());
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 //app.use(requestLogger)
 
+const validatePerson = async (person, isPush) => {
+  const errorMsg = []
+  if (person === undefined) {
+    return response.status(400).json({ error: 'content missing' })
+  }
+  else if (!person.name || !person.number) {
+    if (!person.name) {
+      errorMsg.push('name is invalid')
+    }
+    if (!person.number) {
+      errorMsg.push('number is invalid')
+    }
+  }
+  else if (isPush) {
+    const personExist = await Person.exists({ name: person.name })
+    if (personExist) {
+      errorMsg.push('name must be unique')
+    }
+  }
+  return errorMsg
+}
 
 /**
  * Get all persons.
@@ -72,7 +73,9 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
  * Express asettaa headerin Content-Type arvoksi application/json
  */
 app.get('/api/persons', (request, response) => {
-  response.json(persons)
+  Person.find({})
+    .then(persons => response.json(persons))
+    .catch(error =>response.status(400).json({ error }))
 })
 
 /**
@@ -81,47 +84,52 @@ app.get('/api/persons', (request, response) => {
  * Content-Type-headerin arvoksi text/html ja statuskoodiksi tulee oletusarvoisesti 200.
  */
 app.get('/info', (request, response) => {
+  Person.find({}).then(persons => {
   const msg = 
-  `<div>
-    <p>Phonebook has info for ${persons.length} people</p>
-    <p>${new Date()}</p>
-  </div>`
-  response.send(msg)
+    `<div>
+      <p>Phonebook has info for ${persons.length} people</p>
+      <p>${new Date()}</p>
+    </div>`
+    response.send(msg)
+  })
 })
 
 /**
  * Get person by id
  */
 app.get('/api/persons/:id', (request, response) => {
-  //const id = parseInt(request.params.id)
-  const id = Number(request.params.id)
-  const person = persons.find(person => person.id === id)
+  Person.findById(request.params.id).then(person => {
+    console.log(`Get person: id=${id}, data=${person}`)
+    if (person) {
+      response.json(person)
+    }
+    else {
+      response.status(404).end()
+    }
+  })
+  .catch(error =>
+    response.status(400).json({ error }))
 
-  console.log(`Get person: id=${id}, data=${person}`)
-
-  if (person) {
-    response.json(person)
-  }
-  else {
-    response.status(404).end()
-  }
 })
 
 /**
  * Delete person
  */
 app.delete('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  persons = persons.filter(person => person.id !== id)
-  response.status(204).end()
+  Person.findByIdAndDelete(request.params.id)
+    .then(result => response.status(204).end())
+    .catch(error =>
+      response.status(400).json({ error }))
+
 })
 
 /**
  * Add person
  */
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', async (request, response) => {
+
   const body = request.body
-  const msg = validatePerson(body, true)
+  const msg = await validatePerson(body, true)
 
   if (msg.length) {
     console.log('Post error', msg)
@@ -129,40 +137,37 @@ app.post('/api/persons', (request, response) => {
       error: msg.join(', ')
     })
   }
-
-  const person = { ...body,
-    id: generateId(),
-  }
-
-  persons = persons.concat(person)
-  response.json(person)
+  const person = new Person({ ...body})
+  person.save()
+    .then(savedPerson =>
+      response.json(savedPerson)
+    )
+    .catch(error =>
+      response.status(400).json({ error }))
 })
 
 /**
  * Update person
  */
-app.put('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const body = request.body
-  const index = persons.findIndex(person => person.id === id);
+app.put('/api/persons/:id', async (request, response) => {
+  const msg = await validatePerson(request.body, false)
 
-    if (index !== -1) {
-        // Validate new person data
-        const msg = validatePerson(body, false)
-        if (msg.length) {
-          console.log('Put error', msg)
-          return response.status(400).json({ 
-            error: msg.join(', ')
-          })
-        }
-        // Update person list
-        persons = persons.map(person => person.id === id ? { ...person, ...body } : person)
-        console.log('Put - updated person', persons[index])
-        response.status(200).json(persons[index]);
-    } else {
-        console.log('Put error - person not found', id)
-        response.status(404).json({ error: 'person not found' });
-    }
+  if (msg.length) {
+    console.log('Put error', msg)
+    return response.status(400).json({ 
+      error: msg.join(', ')
+    })
+  }
+
+  Person.findByIdAndUpdate(
+    request.params.id, request.body, { new: true })
+    .then(updatePerson => {
+      response.status(200).json(updatePerson)
+    })
+    .catch(error => {
+      console.log('Update error', error)
+      response.status(400).json({ error })
+    })
 })
 
 /**
@@ -173,46 +178,7 @@ app.put('/api/persons/:id', (request, response) => {
  */
 app.use(unknownEndpoint)
 
-
-const validatePerson = (person, isPush) => {
-  const errorMsg = []
-  if (!person.name || !person.number) {
-    if (!person.name) {
-      errorMsg.push('name is invalid')
-    }
-    if (!person.number) {
-      errorMsg.push('number is invalid')
-    }
-  }
-  else if (isPush && persons.some(p =>
-    p.name.toLocaleLowerCase() === person.name.toLocaleLowerCase())) {
-    errorMsg.push('name must be unique')
-  }
-  return errorMsg
-}
-
-const getRandomNumber = (min, max) => {
-  return  Math.floor(Math.random() * (max - min + 1)) + min
-}
-
-const generateId = () => {
-
-  let id = null
-  while(id === null) {
-    if (persons?.length > 0) {
-      id = getRandomNumber(1, persons.length + 5)
-    }
-    else {
-      id = 1
-    }
-    if (persons.some(person => person.id === id)) {
-      id = null
-    }
-  }
-  return id
-}
-
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })

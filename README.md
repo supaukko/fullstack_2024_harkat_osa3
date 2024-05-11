@@ -109,5 +109,15 @@ const uri = "mongodb+srv://fullstacksurfing:<password>@test.n5n2a0q.mongodb.net/
 npm install mongoose
 ```
 
-Db url `mongodb+srv://fullstacksurfing:${password}@test.n5n2a0q.mongodb.net/?retryWrites=true&w=majority&appName=phoneBookApp`
+Db url: `mongodb+srv://fullstacksurfing:${password}@test.n5n2a0q.mongodb.net/?retryWrites=true&w=majority&appName=phoneBookApp`
 
+Shema:
+```
+
+```
+
+## Ympärsitömuutujat
+
+Lokaalissa käytetään 
+
+Tuotannossa / [Render dashboardissa](https://dashboard.render.com) muuttujat annetaan `Environment` välilehdessä
