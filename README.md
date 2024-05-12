@@ -121,3 +121,9 @@ Shema:
 Lokaalissa käytetään 
 
 Tuotannossa / [Render dashboardissa](https://dashboard.render.com) muuttujat annetaan `Environment` välilehdessä
+
+# Validointi ja ESLint
+
+## Validointi
+
+Käytetään Mongoosen custom validator -toiminnallisuutta

@@ -48,10 +48,9 @@ const App = () => {
         showNotification(`Updated ${returnedPerson.name}`, style.notification)
       })
       .catch(error => {
-        setPersons(persons.filter(p => p.id !== updatedPerson.id))
-        showNotification(
-          `Information of ${updatedPerson.name} has already been removed from server - ${error}`,
-          style.error)
+        //setPersons(persons.filter(p => p.id !== updatedPerson.id))
+        console.log('updatePerson', error.response.data.error)
+        showNotification(error.response.data.error, style.error)
       })
   }
 
@@ -73,9 +72,13 @@ const App = () => {
       personService
       .create(personObj)
         .then(returnedPerson => {
-        setPersons(persons.concat(returnedPerson))
-        showNotification(`Added ${returnedPerson.name}`, style.notification)
-      })
+          setPersons(persons.concat(returnedPerson))
+          showNotification(`Added ${returnedPerson.name}`, style.notification)
+        })
+        .catch(error => {
+          console.log('addPerson', error.response.data.error)
+          showNotification(error.response.data.error, style.error)
+        })
     }
     setNewName('')
     setNewNumber('')

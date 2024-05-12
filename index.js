@@ -42,37 +42,15 @@ const requestLogger = (request, response, next) => {
 }
 //app.use(requestLogger)
 
-const validatePerson = async (person, isPush) => {
-  const errorMsg = []
-  if (person === undefined) {
-    return response.status(400).json({ error: 'content missing' })
-  }
-  else if (!person.name || !person.number) {
-    if (!person.name) {
-      errorMsg.push('name is invalid')
-    }
-    if (!person.number) {
-      errorMsg.push('number is invalid')
-    }
-  }
-  else if (isPush) {
-    const personExist = await Person.exists({ name: person.name })
-    if (personExist) {
-      errorMsg.push('name must be unique')
-    }
-  }
-  return errorMsg
-}
-
 /**
  * Get all persons.
  * Json metodissa annetaan JSON-muuttuja, jonka Express muuttaa JSON-muotoiseksi merkkijonon.
  * Express asettaa headerin Content-Type arvoksi application/json
  */
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
   Person.find({})
     .then(persons => response.json(persons))
-    .catch(error =>response.status(500).json({ error }))
+    .catch(error => next(error))
 })
 
 /**
@@ -115,12 +93,12 @@ app.get('/api/persons/:id', (request, response, next) => {
 /**
  * Delete person
  */
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndDelete(request.params.id)
     .then(result => response.status(204).end())
     .catch(error => {
       //response.status(400).json({ error })
-      error => next(error)
+      next(error)
     })
 
 })
@@ -128,50 +106,37 @@ app.delete('/api/persons/:id', (request, response) => {
 /**
  * Add person
  */
-app.post('/api/persons', async (request, response) => {
+app.post('/api/persons', (request, response, next) => {
 
   const body = request.body
-  const msg = await validatePerson(body, true)
-
-  if (msg.length) {
-    console.log('Post error', msg)
-    return response.status(400).json({ 
-      error: msg.join(', ')
-    })
-  }
   const person = new Person({ ...body})
   person.save()
     .then(savedPerson =>
       response.json(savedPerson)
     )
     .catch(error => {
-      //response.status(400).json({ error })
-      error => next(error)
+      //console.log('Post', error)
+      next(error)
     })
 })
 
 /**
  * Update person
  */
-app.put('/api/persons/:id', async (request, response) => {
-  const msg = await validatePerson(request.body, false)
-
-  if (msg.length) {
-    console.log('Put error', msg)
-    return response.status(400).json({ 
-      error: msg.join(', ')
-    })
-  }
-
+app.put('/api/persons/:id', (request, response, next) => {
+  // Tietokannan skeeman validaatiota ei suoriteta
+  // oletusarvoisesti metodin findOneAndUpdate suorituksen yhteydessä
   Person.findByIdAndUpdate(
-    request.params.id, request.body, { new: true })
-    .then(updatePerson => {
+      request.params.id,
+      request.body,
+      // { new: true}
+      { new: true, runValidators: true, context: 'query' }
+    ).then(updatePerson => {
       response.status(200).json(updatePerson)
     })
     .catch(error => {
-      console.log('Update error', error)
-      //response.status(400).json({ error })
-      error => next(error)
+      //console.log('Update error', error)
+      next(error)
     })
 })
 
@@ -188,10 +153,15 @@ const unknownEndpoint = (request, response) => {
 app.use(unknownEndpoint)
 
 const errorHandler = (error, request, response, next) => {
-  console.error(error.message)
-
+  console.error('errorHandler', error.name, error.message)
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
+  }
+  else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
+  else {
+    return response.status(500).json({ error: error.message })
   }
   next(error)
 }
