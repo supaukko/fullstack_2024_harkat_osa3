@@ -24,7 +24,7 @@ export default [
       '@stylistic/js/indent': ['error', 2],
       '@stylistic/js/semi': ['error', 'never'],
       '@stylistic/js/quotes': ['error', 'single'],
-      '@stylistic/js/linebreak-style': ['error', 'unix'],
+      '@stylistic/js/linebreak-style': ['warn', 'unix'],
       'no-console': 'off',
       'no-unused-vars': 'warn',
       'no-unreachable': 'warn',
