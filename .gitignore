@@ -89,6 +89,7 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
+# Sovelluksen tuotantoversio viedään internettiin https://render.com/ avulla ja tästä syystä dist hakemisto on kommenteissa
 # dist
 
 # Gatsby files

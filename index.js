@@ -1,8 +1,8 @@
-require('dotenv').config();
+require('dotenv').config()
 const express = require('express')
 const http = require('http')
-const morgan = require('morgan');
-const bodyParser = require('body-parser');
+const morgan = require('morgan')
+const bodyParser = require('body-parser')
 const Person = require('./models/person')
 
 morgan.token('body', request => {
@@ -17,7 +17,7 @@ const app = express()
 app.use(express.static('dist'))
 app.use(cors())
 app.use(express.json())
-app.use(bodyParser.json());
+app.use(bodyParser.json())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 /**
@@ -60,7 +60,7 @@ app.get('/api/persons', (request, response, next) => {
  */
 app.get('/info', (request, response) => {
   Person.find({}).then(persons => {
-  const msg = 
+    const msg = 
     `<div>
       <p>Phonebook has info for ${persons.length} people</p>
       <p>${new Date()}</p>
@@ -82,12 +82,12 @@ app.get('/api/persons/:id', (request, response, next) => {
       response.status(404).end()
     }
   })
-  .catch(error => {
-    console.log(error)
-    // Kun next funktion kutsussa annetaan parametri,
-    // siirtyy käsittely virheidenkäsittelymiddlewarelle
-    next(error)
-  })
+    .catch(error => {
+      console.log(error)
+      // Kun next funktion kutsussa annetaan parametri,
+      // siirtyy käsittely virheidenkäsittelymiddlewarelle
+      next(error)
+    })
 })
 
 /**
@@ -127,13 +127,13 @@ app.put('/api/persons/:id', (request, response, next) => {
   // Tietokannan skeeman validaatiota ei suoriteta
   // oletusarvoisesti metodin findOneAndUpdate suorituksen yhteydessä
   Person.findByIdAndUpdate(
-      request.params.id,
-      request.body,
-      // { new: true}
-      { new: true, runValidators: true, context: 'query' }
-    ).then(updatePerson => {
-      response.status(200).json(updatePerson)
-    })
+    request.params.id,
+    request.body,
+    // { new: true}
+    { new: true, runValidators: true, context: 'query' }
+  ).then(updatePerson => {
+    response.status(200).json(updatePerson)
+  })
     .catch(error => {
       //console.log('Update error', error)
       next(error)
@@ -152,6 +152,10 @@ const unknownEndpoint = (request, response) => {
  */
 app.use(unknownEndpoint)
 
+/**
+ * Middleware keskitetylle virhekäsittelylle. Mongooseen sisäänrakennettuja
+ * validointisääntöjä käytetään HTTP parametrien validoinnissa
+ */
 const errorHandler = (error, request, response, next) => {
   console.error('errorHandler', error.name, error.message)
   if (error.name === 'CastError') {
