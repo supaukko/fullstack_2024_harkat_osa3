@@ -7,36 +7,43 @@ if (process.argv.length < 3) {
 
 const password = process.argv[2]
 
-const url = 
+const url =
     `mongodb+srv://fullstacksurfing:${password}@test.n5n2a0q.mongodb.net/?retryWrites=true&w=majority&appName=phoneBookApp`
 
 mongoose.set('strictQuery', false)
 mongoose.connect(url)
 
 const personSchema = new mongoose.Schema({
-  name: String,
-  number: String
+  name: {
+    type: String,
+    minlength: 3,
+    required: [true, 'Username required']
+  },
+  number: {
+    type: String,
+    required: [true, 'Phone number required']
+  }
 })
 
 const Person = mongoose.model('Person', personSchema)
 
 if (process.argv.length === 5) {
-    const person = new Person({
-        name: process.argv[3],
-        number: process.argv[4],
-    })
+  const person = new Person({
+    name: process.argv[3],
+    number: process.argv[4],
+  })
 
-    person.save().then(result => {
-        console.log(`added ${result.name} number ${result.number} to phonebook`)
-        mongoose.connection.close()
-    })
+  person.save().then(result => {
+    console.log(`added ${result.name} number ${result.number} to phonebook`)
+    mongoose.connection.close()
+  })
 }
 else if (process.argv.length === 3) {
-    Person.find({}).then(persons => {
+  Person.find({}).then(persons => {
     console.log('phonebook:')
     persons.forEach(person => {
-        console.log(`${person.name} ${person.number}`)
+      console.log(`${person.name} ${person.number}`)
     })
     mongoose.connection.close()
-    })
+  })
 }
