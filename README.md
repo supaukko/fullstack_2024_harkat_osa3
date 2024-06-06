@@ -8,7 +8,9 @@ Jos React-koodi tekee HTTP-pyynnön palvelimen johonkin osoitteeseen, joka ei ol
 
 # Frontendin tuotantokoodin buildaus ja deploy Render-palveluun
 
-Sovellus viedään internettiin [Render](https://render.com/) palvelun avulla ja pyörii osoitteesta: [fullstack-2024-harkat-osa3-v1](https://fullstack-2024-harkat-osa3-v1.onrender.com)
+Sovellus viedään internettiin [Render](https://render.com/) palvelun avulla ja pyörii osoitteesta: https://fullstack-2024-harkat-osa3-v1.onrender.com 
+
+
 
 Frontin staattisten tiedostojen buildaus ja deploy:
 ```
